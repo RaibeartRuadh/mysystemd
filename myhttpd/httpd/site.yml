@@ -1,0 +1,72 @@
+---
+- name: Создаем несколько web-серверов Apache2
+  hosts: all
+  become: true
+  tasks:
+    - name: Отключаем безопасность
+      selinux:
+        policy: targeted
+        state: permissive
+
+    - name: Используя yum, ставим httpd
+      yum:
+        name: httpd
+
+    - name: Создаём директории под файлы index.html для каждого веб-сервиса
+      file:
+        dest: "/var/www/{{ item.name }}"
+        owner: apache
+        group: apache
+        state: directory
+        mode: 0750
+      loop: "{{ web_servers }}"
+
+    - name: Копируем нашу страничку index.html, используя шблон jinja2
+      template:
+        src: ansible/hello_world.html.j2
+        dest: "/var/www/{{ item.name }}/index.html"
+        mode: 0640
+        owner: apache
+        group: apache
+      loop: "{{ web_servers }}"
+
+    - name: Конфигурим web-сервера, используя шаблон jinja2
+      template:
+        src: "ansible/{{ item.config_filename }}.j2"
+        dest: "/etc/httpd/conf/{{ item.name }}.conf"
+      loop: "{{ web_servers }}"
+      notify: "restart httpd-{{ item.name }}"
+
+    - name: Запускаем web-сервера
+      copy:
+        src: ansible/httpd@.service
+        dest: /etc/systemd/system/httpd@.service
+      notify:
+        - restart httpd-one
+        - restart httpd-two
+        - restart httpd-three
+
+  handlers:
+    - name: restart httpd-one
+      systemd:
+        name: httpd@one.service
+        daemon_reload: true
+        enabled: true
+        state: restarted
+
+    - name: restart httpd-two
+      systemd:
+        name: httpd@two.service
+        daemon_reload: true
+        enabled: true
+        state: restarted
+
+    - name: restart httpd-three
+      systemd:
+        name: httpd@three.service
+        daemon_reload: true
+        enabled: true
+        state: restarted
+
+
+
