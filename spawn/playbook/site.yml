@@ -1,0 +1,46 @@
+---
+- name: Создаем сервисы
+  hosts: all
+  become: true
+  tasks:
+    - name: Устанавливаем репозитория epel-release
+      yum:
+        name: epel-release
+
+    - name: Установка пакетов
+      yum:
+        name: "{{ item }}"
+      loop:
+        - httpd
+        - spawn-fcgi
+        - nano
+        - mc
+        - php
+        - php-cli
+        - mod_fcgid
+# Ссылаюсь на материалы, которые помогли в работе
+# https://flask-russian-docs.readthedocs.io/ru/latest/deploying/fastcgi.html
+
+
+    - name: Заливаем наш файл конфигурации spawn-fcgi
+      template:
+        src: spawn-fcgi.j2
+        dest: /etc/sysconfig/spawn-fcgi
+      notify: restart spawn-fcgi
+
+    - name: Заливаем наш файл для юнита spawn-fcgi и рестартуем
+      copy:
+        src: spawn-fcgi.service
+        dest: /etc/systemd/system/spawn-fcgi.service
+      notify: restart spawn-fcgi
+
+
+  handlers:
+    - name: restart spawn-fcgi
+      systemd:
+        name: spawn-fcgi.service
+        daemon_reload: true
+        enabled: true
+        state: restarted
+
+

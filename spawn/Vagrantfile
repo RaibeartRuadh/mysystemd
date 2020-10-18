@@ -1,0 +1,21 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "centos/7"
+  config.vm.box_check_update = false
+
+  config.vm.define "spawn-fcgi" do |spawn_fcgi|
+    spawn_fcgi.vm.network "private_network", ip: "192.168.10.10"
+    spawn_fcgi.vm.provision "ansible" do |ansible|
+      ansible.playbook = "playbook/site.yml"
+	  # Параметры spawn-fcgi: port number not configurable
+	  # https://mail-index.netbsd.org/pkgsrc-users/2010/04/11/msg012035.html
+	  # .dev-20110405
+      ansible.extra_vars = {
+        spawn_fcgi_port: 9000,
+        spawn_fcgi_host: "127.0.0.1",
+      }
+    end
+  end
+end

@@ -1,0 +1,2 @@
+SOCKET=/var/run/php-fcgi.sock
+OPTIONS="-u apache -g apache -a {{ spawn_fcgi_host }} -p {{ spawn_fcgi_port }} -C 32 -F 1 -P /var/run/spawn-fcgi.pid -- /usr/bin/php-cgi"
