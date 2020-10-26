@@ -1,0 +1,10 @@
+[Unit]
+Description=Запуск каждые 30 секунд после старта
+
+[Timer]
+OnBootSec=30s
+OnUnitActiveSec=30s
+Unit=watch.service
+
+[Install]
+WantedBy=timers.target

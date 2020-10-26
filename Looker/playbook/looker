@@ -1,0 +1,6 @@
+# keyword for alert
+keyword="alert"
+# name of target file
+logfile="/var/log/mylog.log"
+
+

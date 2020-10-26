@@ -1,0 +1,59 @@
+---
+- name: Создаем сервисы
+  hosts: all
+  become: true
+  tasks:
+    - name: Устанавливаем репозитория epel-release
+      yum:
+        name: epel-release
+
+    - name: Установка пакетов для удобства (опциональный блок)
+      yum:
+        name: "{{ item }}"
+      loop:
+        - nano
+        - mc
+
+    - name: Копируем наш лог для наблюдения (там есть ключевое слово)
+      copy:
+        src: mylog.log
+        dest: /var/log/mylog.log
+
+    - name: Копируем наш файл (что ищем и где)
+      copy:
+        src: looker
+        dest: /etc/sysconfig/looker
+
+    - name: Unit сервиса запуска через заданное время
+      copy:
+        src: timer.timer
+        dest: /etc/systemd/system/timer.timer
+      notify: restart timer.timer
+      
+    - name: Unit сервиса для выполнения скрипта поиска
+      copy:
+        src: watch.service
+        dest: /etc/systemd/system/watch.service
+      notify: restart watch.service
+      
+    - name: Сам скрипт, при нахождении слова выводит его журнал messages 
+      copy:
+        src: watch.sh 
+        dest: /var/opt/watch.sh 
+ 
+  handlers:
+     - name: restart watch.service
+       systemd:
+         name: watch.service
+         daemon_reload: true
+         enabled: true
+
+     - name: restart timer.timer
+       systemd:
+         name: timer.timer
+         daemon_reload: true
+         enabled: true
+         state: restarted
+        
+
+ 
